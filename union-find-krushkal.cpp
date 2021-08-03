@@ -2,6 +2,7 @@
  #include<algorithm>
  #include<vector>
  #include<bits/stdc++.h>
+ #include <chrono>
  using namespace std;
  
  struct edgepairs{
@@ -235,20 +236,24 @@
         }
         
 
-   clock_t start , end1;
-   double cpu_time_used;
+     using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
 
-
+   auto t1 = high_resolution_clock::now();
    //create and object of kruskal class
    Kruskal graph(n);
 
    //call kruskal class's member function to find MST
-   start = clock();
+   
    graph.createMST( g);
-   end1 = clock();
+   auto t2 = high_resolution_clock::now();
+   
+    auto ms_int = duration_cast<milliseconds>(t2 - t1);
+	 std::cout << ms_int.count() << "ms\n";
 
-   cpu_time_used = ((double) (end1 - start)) / CLOCKS_PER_SEC;
-    printf("the time taken = %f in sec",cpu_time_used);
+  
 
    return 0;
 
