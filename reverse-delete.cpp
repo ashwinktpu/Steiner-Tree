@@ -1,135 +1,102 @@
-// C++ program to find Minimum Spanning Tree
-// of a graph using Reverse Delete Algorithm
-#include<bits/stdc++.h>
-
+#include <bits/stdc++.h>
+#define ll long long int
+#define ld long double
+#define mk make_pair
+#define pb push_back
+#define MOD 1000000007
+#define fo(i, a, b) for (i = a; i < b; i++)
+#define boost                    \
+    ios::sync_with_stdio(false); \
+    cin.tie(0)
 using namespace std;
 
-// Creating shortcut for an integer pair
-typedef  pair<int, int> iPair;
-
-struct edgepairs{
+ struct edgepairs{
   int x;
   int y;
   int weight;
 };
 
-// Graph class represents a directed graph
-// using adjacency list representation
-class Graph
+// Adding u to v nodes to the graph and weight between them
+void AddWeightedEdge(unordered_map<int, unordered_set<int>> &graph, vector<pair<int, pair<int, int>>> &edges, int u, int v, int w)
 {
-    int V;    // No. of vertices
-    list<int> *adj;
-    vector< pair<int, iPair> > edges;
-    void DFS(int v, bool visited[]);
-
-public:
-    Graph(int V);   // Constructor
-
-    // function to add an edge to graph
-    void addEdge(int u, int v, int w);
-
-    // Returns true if graph is connected
-    bool isConnected();
-
-    void reverseDeleteMST();
-};
-
-Graph::Graph(int V)
-{
-    this->V = V;
-    adj = new list<int>[V];
-}
-
-void Graph::addEdge(int u, int v, int w)
-{
-    adj[u].push_back(v); // Add w to v’s list.
-    adj[v].push_back(u); // Add w to v’s list.
+    graph[u].insert(v);
+    graph[v].insert(u);
     edges.push_back({w, {u, v}});
 }
 
-void Graph::DFS(int v, bool visited[])
+// DFS on the node
+void DFS(unordered_map<int, unordered_set<int>> &graph, vector<bool> &visited, int node)
 {
-    // Mark the current node as visited and print it
-    visited[v] = true;
-
-    // Recur for all the vertices adjacent to
-    // this vertex
-    list<int>::iterator i;
-    for (i = adj[v].begin(); i != adj[v].end(); ++i)
-        if (!visited[*i])
-            DFS(*i, visited);
+    visited[node] = 1;
+    for (auto neighbour : graph[node])
+    {
+        if (!visited[neighbour])
+        {
+            DFS(graph, visited, neighbour);
+        }
+    }
 }
 
-// Returns true if given graph is connected, else false
-bool Graph::isConnected()
+// Checking if the graph is connected after removing the edge
+bool checkConnected(unordered_map<int, unordered_set<int>> &graph, int V)
 {
-    bool visited[V];
-    memset(visited, false, sizeof(visited));
+    // vector to keep track of visited and initialized to 0
+    vector<bool> visited(V, 0);
 
-    // Find all reachable vertices from first vertex
-    DFS(0, visited);
+    // Starting DFS from node 0
+    DFS(graph, visited, 0);
 
-    // If set of reachable vertices includes all,
-    // return true.
-    for (int i=1; i<V; i++)
-        if (visited[i] == false)
-            return false;
+    // Checking if each node is visited. If a node is not visited that means the graph is disconnected and we return 0
+    // The removed edge needs to be added again
+    for (int i = 0; i < V; i++)
+        if (visited[i] == 0)
+            return 0;
 
-    return true;
+    // If all nodes are visited removing the edge does keep the graph connected
+    return 1;
 }
 
-// This function assumes that edge (u, v)
-// exists in graph or not,
-void Graph::reverseDeleteMST()
+void reverseDeleteMST(unordered_map<int, unordered_set<int>> &graph, vector<pair<int, pair<int, int>>> &edges, int V)
 {
-    // Sort edges in increasing order on basis of cost
+    // Sorting the edges
     sort(edges.begin(), edges.end());
 
-    long long int mst_wt = 0;  // Initialize weight of MST
+    // Weight of the MST
+    long long int mstWeight = 0;
+    int u, v;
 
-    cout << "Edges in MST\n";
-
-    // Iterate through all sorted edges in
-    // decreasing order of weights
-    for (int i=edges.size()-1; i>=0; i--)
+    for (int i = edges.size() - 1; i >= 0; i--)
     {
-        int u = edges[i].second.first;
-        int v = edges[i].second.second;
+        u = edges[i].second.first;
+        v = edges[i].second.second;
 
-        // Remove edge from undirected grap
-        
-        adj[u].remove(v);
-        adj[v].remove(u);
+        // Deleting the edge from the graph
+        graph[u].erase(v);
+        graph[v].erase(u);
 
-        // Adding the edge back if removing it
-        // causes disconnection. In this case this
-        // edge becomes part of MST.
-        
-        if (isConnected() == false)
+        // Check if the graph is connected after removing the edge
+        if (checkConnected(graph, V) == 0)
         {
-            adj[u].push_back(v);
-            adj[v].push_back(u);
+            // Re-adding the edge as the graph gets disconnected
+            graph[u].insert(v);
+            graph[v].insert(u);
 
-            // This edge is part of MST
-            cout << "(" << u << ", " << v << ") \n";
-            mst_wt += edges[i].first;
+            cout << "Edge : " << u << " " << v << "\n";
+            mstWeight += edges[i].first;
         }
-        
-        
     }
-
-    cout << "Total weight of MST is " << mst_wt;
-    
+    cout << "Weight of MST is : " << mstWeight << "\n";
 }
 
-// Driver code
 int main(int argc , char **argv)
 {
-
-    //File pointer declaration
+	
+	
+	
+	  //File pointer declaration
     FILE *filePointer;
   long long int number;
- long long int n, m;
+  long long int n, m;
 
      char *filename = argv[1];
     filePointer = fopen( filename , "r") ;
@@ -145,7 +112,6 @@ int main(int argc , char **argv)
      fscanf(filePointer, "%lld", &m );
      
     printf("%lld %lld\n",n , m );
-	  Graph g(n);
 
         vector <edgepairs> COO(m);
         //Reading from file and populate the COO
@@ -163,7 +129,7 @@ int main(int argc , char **argv)
         {
             COO[i].y = number;
         }
-
+        
         }
         }
 		
@@ -172,9 +138,10 @@ int main(int argc , char **argv)
 			 COO[i].weight = i;
 			
 		}
-        
-        /*
 		
+		
+		   
+ 
         printf("printing coo matrix\n");
 
         for(int i=0;i<COO.size();i++){
@@ -182,33 +149,37 @@ int main(int argc , char **argv)
             printf("%d %d %d\n",COO[i].x,COO[i].y,COO[i].weight);
 
         }
+        
 		
-		 printf("finished coo matrix\n");
-		 
-		 */
-		 
-		 
-       
-
-  
+        printf("finished printing coo");
+		
+        
    
-      for(int i=0;i<COO.size();i++){
-            g.addEdge(COO[i].x,COO[i].y,COO[i].weight);
+      
+    int V = n;
+    unordered_map<int, unordered_set<int>> graph;
+    vector<pair<int, pair<int, int>>> edges;
+	
+	using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    // Adding nodes to the graph and edges
+    // Same graph as the one in the example
+	
+	auto t1 = high_resolution_clock::now();
+	for(int i=0;i<COO.size();i++){
+            AddWeightedEdge(graph, edges, COO[i].x, COO[i].y, COO[i].weight);
 
         }
-        
 
-    
+    // Calling reverse Delete MST
 
-    clock_t start , end1;
-    double cpu_time_used;
-
-    start = clock();
-    g.reverseDeleteMST();
-    end1 = clock();
-
-
-    cpu_time_used = ((double) (end1 - start)) / CLOCKS_PER_SEC;
-    printf("\nthe time taken = %f in sec",cpu_time_used);
-    return 0;
+    reverseDeleteMST(graph, edges, V);
+	auto t2 = high_resolution_clock::now();
+	
+	auto ms_int = duration_cast<milliseconds>(t2 - t1);
+	 std::cout << ms_int.count() << "ms\n";
 }
+
